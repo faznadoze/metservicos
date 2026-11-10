@@ -35,6 +35,14 @@ export const Footer: React.FC<FooterProps> = ({ selectedInterest, onOpenPrivacyM
               Política de Privacidade
             </button>
             <a
+              href={COMPANY_CONFIG.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              Instagram
+            </a>
+            <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"

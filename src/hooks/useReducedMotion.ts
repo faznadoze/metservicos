@@ -22,7 +22,9 @@ export function shouldSkipIntroLoader(): boolean {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
   if (params.get('autostart') === '1') return true;
+  if (params.get('loader') === '1') return false;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+  if (import.meta.env.DEV) return false;
   try {
     if (sessionStorage.getItem('met_intro_seen') === '1') return true;
   } catch {

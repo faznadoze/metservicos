@@ -25,8 +25,8 @@ test('WhatsApp preset messages match the exact plan specifications', () => {
     'Olá! Quero agendar uma avaliação/limpeza do meu sistema fotovoltaico.'
   );
 
-  const url = buildServiceWhatsAppUrl('instalacao', '5511999990000');
-  assert.ok(url.startsWith('https://wa.me/5511999990000?text='));
+  const url = buildServiceWhatsAppUrl('instalacao');
+  assert.ok(url.startsWith('https://wa.me/5548999698995?text='));
   assert.ok(decodeURIComponent(url).includes('instalação de energia solar'));
 });
 

@@ -305,7 +305,7 @@ export const LeadFormSection: React.FC<LeadFormSectionProps> = ({
                         onChange={(e) =>
                           handleFieldChange('whatsapp', formatPhoneBR(e.target.value))
                         }
-                        placeholder="(11) 99999-0000"
+                        placeholder="(48) 99969-8995"
                         aria-invalid={Boolean(errors.whatsapp)}
                         aria-describedby={errors.whatsapp ? 'error-lead-whatsapp' : undefined}
                         className={`w-full rounded-full border px-4 py-2.5 text-sm font-mono-tabular text-[#0B1933] placeholder:text-slate-400 focus:outline-2 focus:outline-[#0582E8] ${
@@ -550,6 +550,16 @@ export const LeadFormSection: React.FC<LeadFormSectionProps> = ({
                     className="hover:text-[#0B1933] transition-colors font-mono-tabular"
                   >
                     Ligação: {COMPANY_CONFIG.phoneDisplay}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={COMPANY_CONFIG.instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#0B1933] transition-colors"
+                  >
+                    Instagram: @{COMPANY_CONFIG.instagramHandle}
                   </a>
                 </li>
                 <li>
