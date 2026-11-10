@@ -226,17 +226,6 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({ onComplete }) => {
           style={{ width: '0%' }}
         />
       </div>
-
-      {/* Botão sutil acessível para pular introdução caso necessário */}
-      <div className="absolute top-6 right-6 z-10">
-        <button
-          type="button"
-          onClick={finishLoader}
-          className="text-xs text-slate-400 hover:text-slate-600 transition-colors py-1 px-2.5 rounded focus-visible:outline-2 focus-visible:outline-[#1B2E51]"
-        >
-          Pular
-        </button>
-      </div>
     </div>
   );
 };

@@ -6,8 +6,11 @@ import {
   getPresetWhatsAppMessage,
 } from './whatsapp';
 import {
+  computeCarouselActiveIndex,
+  computeSheetDragOffset,
   evaluateSolarScenario,
   formatPhoneBR,
+  shouldDismissSheetByGesture,
   validateLeadForm,
 } from './validation';
 import { trackEvent, getTrackedEvents } from './analytics';
@@ -105,4 +108,25 @@ test('trackEvent records conversion events in sequence', () => {
   const events = getTrackedEvents();
   assert.ok(events.length >= 2);
   assert.equal(events[events.length - 1].name, 'click_whatsapp_hero');
+});
+
+test('mobile gesture helpers apply rubber-band damping and velocity dismissal', () => {
+  assert.equal(computeSheetDragOffset(120), 120);
+  assert.equal(computeSheetDragOffset(-100, 0.25), -25);
+
+  // Fast flick over short distance dismisses (velocity = 45 / 120 = 0.375 > 0.11)
+  assert.equal(shouldDismissSheetByGesture(45, 120), true);
+  // Slow drag past distance threshold dismisses
+  assert.equal(shouldDismissSheetByGesture(110, 2000), true);
+  // Slow short drag snaps back
+  assert.equal(shouldDismissSheetByGesture(40, 600), false);
+  // Upward drag never dismisses
+  assert.equal(shouldDismissSheetByGesture(-80, 100), false);
+});
+
+test('computeCarouselActiveIndex maps scroll progress to card index accurately', () => {
+  assert.equal(computeCarouselActiveIndex(0, 1200, 300, 4), 0);
+  assert.equal(computeCarouselActiveIndex(300, 1200, 300, 4), 1);
+  assert.equal(computeCarouselActiveIndex(600, 1200, 300, 4), 2);
+  assert.equal(computeCarouselActiveIndex(900, 1200, 300, 4), 3);
 });

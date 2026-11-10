@@ -43,12 +43,21 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
               mask: 'lines',
               autoSplit: true,
               onSplit(self) {
+                gsap.set(self.lines, {
+                  paddingBottom: '0.15em',
+                  marginBottom: '-0.15em',
+                });
                 return gsap.from(self.words, {
-                  yPercent: 110,
+                  yPercent: 115,
                   autoAlpha: 0,
                   duration: 0.75,
                   stagger: 0.045,
                   ease: 'power3.out',
+                  onComplete: () => {
+                    if (self.masks?.length) {
+                      gsap.set(self.masks, { overflow: 'visible' });
+                    }
+                  },
                 });
               },
             });
@@ -87,7 +96,7 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
     <section
       id="inicio"
       ref={sectionRef}
-      className="relative flex min-h-[736px] md:h-[865px] items-start justify-center overflow-hidden pt-[160px] md:pt-[192px] pb-[120px]"
+      className="relative flex min-h-[100svh] md:min-h-[736px] md:h-[865px] items-start justify-center overflow-hidden pt-[132px] sm:pt-[160px] md:pt-[192px] pb-20 md:pb-[120px]"
     >
       <img
         ref={bgImgRef}
@@ -103,10 +112,10 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
             'radial-gradient(ellipse 140% 66% at 50% 16.5%, rgba(17,24,39,0.75) 12%, rgba(17,24,39,0) 100%)',
         }}
       />
-      <div className="relative flex w-full max-w-[896px] flex-col items-center gap-6 px-6">
+      <div className="relative flex w-full max-w-[896px] flex-col items-center gap-6 px-5 sm:px-6">
         <h1
           ref={headingRef}
-          className="text-center text-[38px] md:text-[60px] font-medium leading-[1.05] md:leading-[60px] tracking-[-1.5px] text-white"
+          className="text-center text-[34px] sm:text-[42px] md:text-[60px] font-medium leading-[1.15] md:leading-[68px] tracking-[-1.2px] md:tracking-[-1.5px] text-white"
         >
           Quem tem controle sobre a energia <strong className="font-bold">não teme apagões.</strong>
         </h1>
@@ -114,7 +123,7 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
           ref={ctaBtnRef}
           type="button"
           onClick={onCtaClick}
-          className="group flex cursor-pointer items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold leading-5 text-[#111827] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:scale-[0.97] active:shadow-md transition-[transform,box-shadow,background-color] duration-150 ease-out will-change-transform"
+          className="group flex min-h-[48px] cursor-pointer items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold leading-5 text-[#111827] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 active:scale-[0.97] active:shadow-md transition-[transform,box-shadow,background-color] duration-150 ease-emil-out will-change-transform"
         >
           <span>Precavenha-se</span>
           <img
@@ -122,7 +131,7 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
             alt=""
             width={16}
             height={16}
-            className="transition-transform duration-200 group-hover:translate-x-0.5"
+            className="transition-transform duration-150 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:translate-x-0.5"
           />
         </button>
       </div>
@@ -245,7 +254,7 @@ export function PartnerLogos() {
           {/* Marquee track containing two cloned sequences for a seamless 360 loop */}
           <div
             ref={trackRef}
-            className="flex items-center gap-10 sm:gap-16 w-max opacity-75 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 will-change-transform select-none"
+            className="flex items-center gap-10 sm:gap-16 w-max opacity-85 md:opacity-75 md:grayscale [@media(hover:hover)_and_(pointer:fine)]:hover:grayscale-0 [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-100 transition-[opacity,filter] duration-200 ease-emil-out will-change-transform select-none"
           >
             {[0, 1].map((copyIndex) => (
               <div key={copyIndex} className="flex items-center gap-10 sm:gap-16 shrink-0">

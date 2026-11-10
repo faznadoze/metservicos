@@ -115,9 +115,12 @@ export function ValueProposition() {
     { scope: sectionRef }
   );
 
+  const tabListRef = useRef<HTMLDivElement>(null);
+
   const animateAccordionLayout = contextSafe((nextAction: () => void) => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const listEl = accordionListRef.current;
+    const tabPillEl = tabListRef.current?.querySelector('.vp-tab-active-pill');
 
     if (reduceMotion || !listEl) {
       nextAction();
@@ -126,15 +129,28 @@ export function ValueProposition() {
 
     const targets = listEl.querySelectorAll('.vp-accordion-item');
     const state = Flip.getState(targets);
+    const tabState = tabPillEl ? Flip.getState(tabPillEl) : null;
 
     nextAction();
 
     requestAnimationFrame(() => {
+      if (tabState && tabListRef.current) {
+        const nextTabPill = tabListRef.current.querySelector('.vp-tab-active-pill');
+        if (nextTabPill) {
+          Flip.from(tabState, {
+            targets: nextTabPill,
+            duration: 0.24,
+            ease: 'power3.out',
+            absolute: true,
+          });
+        }
+      }
+
       const updatedTargets = listEl.querySelectorAll('.vp-accordion-item');
       Flip.from(state, {
         targets: updatedTargets,
-        duration: 0.38,
-        ease: 'power2.out',
+        duration: 0.28,
+        ease: 'power3.out',
         simple: true,
       });
 
@@ -142,8 +158,8 @@ export function ValueProposition() {
       if (expandedBody) {
         gsap.fromTo(
           expandedBody,
-          { autoAlpha: 0, y: 6, filter: 'blur(1.5px)' },
-          { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.26, ease: 'power2.out' }
+          { autoAlpha: 0, y: 6, filter: 'blur(2px)' },
+          { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.22, ease: 'power2.out' }
         );
       }
     });
@@ -165,39 +181,59 @@ export function ValueProposition() {
   };
 
   return (
-    <section id="beneficios" ref={sectionRef} className="bg-white px-0 py-16 md:p-16">
-      <div className="mx-auto flex max-w-[1152px] flex-col gap-16 md:gap-24 px-6">
-        <h2 className="vp-reveal max-w-[896px] text-[30px] md:text-[48px] font-semibold leading-[1.1] md:leading-[48px] tracking-[-1.2px] text-[#111827]">
+    <section id="beneficios" ref={sectionRef} className="bg-white px-0 py-14 md:p-16">
+      <div className="mx-auto flex max-w-[1152px] flex-col gap-12 md:gap-24 px-5 sm:px-6">
+        <h2 className="vp-reveal max-w-[896px] text-[28px] sm:text-[32px] md:text-[48px] font-semibold leading-[1.14] md:leading-[48px] tracking-[-1px] md:tracking-[-1.2px] text-[#111827]">
           Entregamos soluções de energia solar e conservação adaptadas ao seu imóvel, garantindo{' '}
           <span ref={statementHighlightRef} className="text-[#9ca3af]">
             um processo explicado sem complicação, segurança técnica e cuidado real com o seu patrimônio.
           </span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-          <div role="tablist" className="vp-reveal md:col-span-3 flex flex-col items-start gap-3 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+          <div
+            ref={tabListRef}
+            role="tablist"
+            aria-label="Perfil de imóvel"
+            className="vp-reveal md:col-span-3 grid grid-cols-2 md:flex md:flex-col items-stretch md:items-start gap-1.5 md:gap-3 rounded-xl bg-slate-100/90 p-1 md:bg-transparent md:p-0 md:pt-2"
+          >
             {(
               [
-                ['residencias', '// Para Residências'],
-                ['comercio', '// Comércios e Área Rural'],
+                ['residencias', '01 · Para Residências', 'Para Residências'],
+                ['comercio', '02 · Comércios e Rural', 'Comércios e Rural'],
               ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={audience === key}
-                onClick={() => handleAudienceChange(key)}
-                className={`cursor-pointer text-left font-mono text-sm leading-5 py-1 px-2 rounded-lg active:scale-[0.98] transition-[color,background-color,transform] duration-150 ease-out ${
-                  audience === key ? 'font-bold text-[#111827] bg-slate-100/80' : 'text-[#9ca3af] hover:text-[#4b5563]'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+            ).map(([key, desktopLabel, mobileLabel]) => {
+              const isSelected = audience === key;
+              return (
+                <button
+                  key={key}
+                  role="tab"
+                  type="button"
+                  aria-selected={isSelected}
+                  onClick={() => handleAudienceChange(key)}
+                  className={`relative flex min-h-[44px] md:min-h-0 cursor-pointer items-center justify-center md:justify-start text-center md:text-left font-mono text-xs sm:text-sm leading-5 py-2 md:py-1.5 px-3 md:px-2.5 rounded-lg active:scale-[0.97] transition-[color,transform] duration-150 ease-emil-out whitespace-nowrap ${
+                    isSelected
+                      ? 'font-bold text-[#111827]'
+                      : 'text-[#6b7280] md:text-[#9ca3af] [@media(hover:hover)_and_(pointer:fine)]:hover:text-[#374151]'
+                  }`}
+                >
+                  {isSelected && (
+                    <span
+                      data-flip-id="vp-audience-pill"
+                      className="vp-tab-active-pill absolute inset-0 rounded-lg bg-white md:bg-slate-100/90 shadow-xs md:shadow-none"
+                    />
+                  )}
+                  <span className="relative z-10 md:hidden">{mobileLabel}</span>
+                  <span className="relative z-10 hidden md:inline">{desktopLabel}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div ref={accordionListRef} className="vp-reveal md:col-span-9 flex flex-col gap-6">
-            <h3 className="text-xl font-bold leading-7 text-[#111827]">Por que cuidar do sistema fotovoltaico?</h3>
+          <div ref={accordionListRef} className="vp-reveal md:col-span-9 flex flex-col gap-4 md:gap-6">
+            <h3 className="text-lg sm:text-xl font-bold leading-7 text-[#111827]">
+              Por que cuidar do sistema fotovoltaico?
+            </h3>
             {items.map((item, i) => {
               const isOpen = open === i;
               const n = String(i + 1).padStart(2, '0');
@@ -205,14 +241,20 @@ export function ValueProposition() {
                 <div
                   key={`${audience}-${item.title}`}
                   data-flip-id={`vp-item-${i}`}
-                  className="vp-accordion-item flex flex-col gap-[7px] rounded-2xl bg-[#b7dcfb] px-7 py-6 drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)] transition-[background-color,box-shadow] duration-200"
+                  className="vp-accordion-item flex flex-col gap-2 rounded-2xl bg-[#b7dcfb] px-5 sm:px-7 py-5 sm:py-6 drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)] transition-[background-color,box-shadow] duration-200 ease-emil-out"
                 >
-                  <div className="flex items-center justify-between text-base font-bold leading-6 text-[#111827]">
+                  <div className="flex items-center justify-between gap-3 text-base font-bold leading-6 text-[#111827]">
                     <div className="flex items-center gap-3">
-                      <span>{n}</span>
+                      <span className="font-mono-tabular">{n}</span>
                       <span>{item.title}</span>
                     </div>
-                    <img src="/assets/figma/chevron.svg" alt="" width={20} height={20} className="rotate-180 opacity-70 transition-transform duration-200" />
+                    <img
+                      src="/assets/figma/chevron.svg"
+                      alt=""
+                      width={20}
+                      height={20}
+                      className="rotate-180 opacity-70 shrink-0 transition-transform duration-200 ease-emil-out"
+                    />
                   </div>
                   <p className="vp-active-body text-sm leading-[22.75px] text-[#1f2937]">{item.body}</p>
                 </div>
@@ -223,13 +265,19 @@ export function ValueProposition() {
                   type="button"
                   aria-expanded={false}
                   onClick={() => handleOpenChange(i)}
-                  className="vp-accordion-item group flex cursor-pointer items-center justify-between border-b border-[#e5e7eb] pt-5 pb-[21px] text-left hover:border-[#9ca3af] active:scale-[0.99] transition-[border-color,transform] duration-150 ease-out"
+                  className="vp-accordion-item group flex min-h-[54px] cursor-pointer items-center justify-between gap-3 border-b border-[#e5e7eb] pt-4 pb-4 text-left [@media(hover:hover)_and_(pointer:fine)]:hover:border-[#9ca3af] active:scale-[0.985] transition-[border-color,transform] duration-150 ease-emil-out"
                 >
-                  <span className="flex items-center gap-4 text-base font-bold leading-6 text-[#111827]">
-                    <span>{n}</span>
+                  <span className="flex items-center gap-3 sm:gap-4 text-base font-bold leading-6 text-[#111827]">
+                    <span className="font-mono-tabular">{n}</span>
                     <span>{item.title}</span>
                   </span>
-                  <img src="/assets/figma/chevron.svg" alt="" width={20} height={20} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                  <img
+                    src="/assets/figma/chevron.svg"
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="shrink-0 transition-transform duration-150 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:translate-x-0.5"
+                  />
                 </button>
               );
             })}

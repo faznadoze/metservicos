@@ -132,3 +132,44 @@ export function evaluateSolarScenario(
     ctaLabel: 'Agendar limpeza do meu sistema',
   };
 }
+
+/**
+ * Pure helper for mobile bottom-sheet drag tracking with upward rubber-band damping (Emil Kowalski gestures skill).
+ */
+export function computeSheetDragOffset(deltaY: number, upwardDamping: number = 0.22): number {
+  if (deltaY < 0) {
+    return deltaY * upwardDamping;
+  }
+  return deltaY;
+}
+
+/**
+ * Pure helper for momentum-based sheet dismissal: dismisses if distance >= threshold OR velocity > 0.11 px/ms.
+ */
+export function shouldDismissSheetByGesture(
+  deltaY: number,
+  elapsedMs: number,
+  distanceThreshold: number = 95,
+  velocityThreshold: number = 0.11
+): boolean {
+  if (deltaY <= 0) return false;
+  const safeElapsed = Math.max(elapsedMs, 1);
+  const velocity = deltaY / safeElapsed;
+  return deltaY >= distanceThreshold || velocity > velocityThreshold;
+}
+
+/**
+ * Pure helper for computing active slide index in horizontal scroll-snap carousels.
+ */
+export function computeCarouselActiveIndex(
+  scrollLeft: number,
+  scrollWidth: number,
+  clientWidth: number,
+  itemCount: number
+): number {
+  if (itemCount <= 1) return 0;
+  const maxScroll = scrollWidth - clientWidth;
+  if (maxScroll <= 0) return 0;
+  const ratio = Math.min(Math.max(scrollLeft / maxScroll, 0), 1);
+  return Math.round(ratio * (itemCount - 1));
+}
