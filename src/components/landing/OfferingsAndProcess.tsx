@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ServiceInterest } from '../../content/landingPage';
 import { computeCarouselActiveIndex } from '../../lib/validation';
 
@@ -51,30 +52,107 @@ const OFFERINGS: {
 
 export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest) => void }) {
   const sectionRef = useRef<HTMLElement>(null);
+  const alignGuideRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(true);
+  const [trackPaddingPx, setTrackPaddingPx] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const updateAlignment = () => {
+      const sectionEl = sectionRef.current;
+      const guideEl = alignGuideRef.current;
+      if (!sectionEl || !guideEl) return;
+      const sectionRect = sectionEl.getBoundingClientRect();
+      const guideRect = guideEl.getBoundingClientRect();
+      const computedLeft = Math.max(20, Math.round(guideRect.left - sectionRect.left));
+      setTrackPaddingPx(computedLeft);
+    };
+
+    updateAlignment();
+    const ro = new ResizeObserver(updateAlignment);
+    if (sectionRef.current) ro.observe(sectionRef.current);
+    window.addEventListener('resize', updateAlignment, { passive: true });
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateAlignment);
+    };
+  }, []);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    const onScroll = () => {
+    const syncScrollState = () => {
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
       setActiveIndex(
         computeCarouselActiveIndex(el.scrollLeft, el.scrollWidth, el.clientWidth, OFFERINGS.length)
       );
+      setCanScrollPrev(el.scrollLeft > 6);
+      setCanScrollNext(el.scrollLeft < maxScroll - 6);
     };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, []);
+    syncScrollState();
+    el.addEventListener('scroll', syncScrollState, { passive: true });
+    window.addEventListener('resize', syncScrollState, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', syncScrollState);
+      window.removeEventListener('resize', syncScrollState);
+    };
+  }, [trackPaddingPx]);
+
+  const getCardSnapPositions = () => {
+    const el = trackRef.current;
+    if (!el) return { positions: [] as number[], maxScroll: 0 };
+    const padLeft = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const cards = Array.from(el.querySelectorAll<HTMLElement>('.offering-card'));
+    const positions = cards.map((card) =>
+      Math.min(Math.max(0, Math.round(card.offsetLeft - padLeft)), maxScroll)
+    );
+    return { positions, maxScroll };
+  };
 
   const scrollToCard = (index: number) => {
     const el = trackRef.current;
     if (!el) return;
-    const cards = el.querySelectorAll<HTMLElement>('.offering-card');
-    const targetCard = cards[index];
-    if (!targetCard) return;
-    const targetLeft = targetCard.offsetLeft - (el.clientWidth - targetCard.clientWidth) / 2;
-    el.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    const { positions } = getCardSnapPositions();
+    const targetLeft = positions[index] ?? 0;
+    el.scrollTo({ left: targetLeft, behavior: 'smooth' });
     setActiveIndex(index);
+  };
+
+  const handlePrevCard = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    const { positions } = getCardSnapPositions();
+    const current = el.scrollLeft;
+    // Find the closest distinct snap position strictly to the left of current scrollLeft
+    for (let i = positions.length - 1; i >= 0; i--) {
+      if (positions[i] < current - 10) {
+        el.scrollTo({ left: positions[i], behavior: 'smooth' });
+        setActiveIndex(i);
+        return;
+      }
+    }
+    el.scrollTo({ left: 0, behavior: 'smooth' });
+    setActiveIndex(0);
+  };
+
+  const handleNextCard = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    const { positions, maxScroll } = getCardSnapPositions();
+    const current = el.scrollLeft;
+    // Find the closest distinct snap position strictly to the right of current scrollLeft
+    for (let i = 0; i < positions.length; i++) {
+      if (positions[i] > current + 10) {
+        el.scrollTo({ left: positions[i], behavior: 'smooth' });
+        setActiveIndex(i);
+        return;
+      }
+    }
+    el.scrollTo({ left: maxScroll, behavior: 'smooth' });
+    setActiveIndex(OFFERINGS.length - 1);
   };
 
   useGSAP(
@@ -99,11 +177,7 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
             onEnter: (batch) => {
               gsap.to(batch, {
                 y: 0,
-                autoAlpha: (i, target) => {
-                  const isEdge = target.getAttribute('data-edge') === 'true';
-                  const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-                  return isEdge && isDesktop ? 0.65 : 1;
-                },
+                autoAlpha: 1,
                 duration: 0.55,
                 stagger: 0.08,
                 ease: 'power3.out',
@@ -139,51 +213,99 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
   );
 
   return (
-    <section id="servicos" ref={sectionRef} className="overflow-hidden bg-white px-5 sm:px-6 pt-4 pb-16 md:pt-6 md:pb-24">
-      <div
-        ref={trackRef}
-        className="-mx-5 sm:-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 sm:px-6 pb-3 md:justify-center touch-pan-y [scrollbar-width:none]"
-      >
-        {OFFERINGS.map((o, i) => {
-          const edge = i === 0 || i === OFFERINGS.length - 1;
-          return (
-            <article
-              key={o.title}
-              data-edge={edge ? 'true' : 'false'}
-              className={`offering-card group flex w-[84vw] max-w-[320px] sm:w-[330px] md:w-[395px] md:max-w-none shrink-0 snap-center flex-col gap-2 rounded-3xl border border-slate-100 md:border-transparent bg-[rgba(249,250,251,0.75)] md:bg-[rgba(249,250,251,0.5)] p-[17px] transition-opacity duration-200 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-100 will-change-transform ${
-                edge ? 'md:opacity-65' : ''
-              }`}
-            >
-              <div className="h-[220px] sm:h-[240px] overflow-hidden rounded-2xl bg-[#f3f4f6] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                <img
-                  src={o.img}
-                  alt={o.alt}
-                  loading="lazy"
-                  className="offering-card-img size-full object-cover transition-transform duration-500 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105 will-change-transform"
-                />
-              </div>
-              <h4 className="min-h-[48px] md:min-h-[52px] pt-1 pb-0.5 text-base font-bold leading-6 text-[#111827]">
-                {o.title}
-              </h4>
-              <p className="min-h-[60px] md:min-h-[64px] py-1.5 text-xs font-semibold leading-4 text-[#374151]">
-                {o.desc}
-              </p>
-              <div className="mt-auto flex min-h-[44px] items-end pt-1">
-                <button
-                  type="button"
-                  onClick={() => onSelect(o.interest)}
-                  className="min-h-[44px] cursor-pointer rounded-full border border-[#1f2937] px-[18px] py-2.5 text-xs font-semibold leading-4 text-[#1f2937] [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#1f2937] [@media(hover:hover)_and_(pointer:fine)]:hover:text-white active:scale-[0.96] active:bg-[#1f2937] active:text-white transition-[transform,background-color,color] duration-150 ease-emil-out"
-                >
-                  {o.cta}
-                </button>
-              </div>
-            </article>
-          );
-        })}
+    <section
+      id="servicos"
+      ref={sectionRef}
+      className="relative overflow-hidden bg-white pt-4 pb-16 md:pt-6 md:pb-24"
+    >
+      {/* Hidden layout reference matching ValueProposition (#beneficios) exact container margin */}
+      <div className="pointer-events-none px-0 md:px-16" aria-hidden="true">
+        <div className="mx-auto max-w-[1152px] px-5 sm:px-6">
+          <div ref={alignGuideRef} className="h-0 w-full" />
+        </div>
+      </div>
+
+      <div className="relative">
+        {/* Left extremity navigation button */}
+        <button
+          type="button"
+          aria-label="Card anterior"
+          disabled={!canScrollPrev}
+          onClick={handlePrevCard}
+          className={` absolute left-2.5 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 flex size-11 md:size-12 items-center justify-center rounded-full border border-slate-200/90 bg-white/95 text-[#111827] shadow-[0_8px_24px_-4px_rgba(15,23,42,0.14)] backdrop-blur-md transition-[transform,opacity,background-color,color,border-color] duration-150 ease-emil-out ${
+            canScrollPrev
+              ? 'cursor-pointer opacity-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#111827] [@media(hover:hover)_and_(pointer:fine)]:hover:text-white [@media(hover:hover)_and_(pointer:fine)]:hover:border-[#111827] active:scale-95'
+              : 'pointer-events-none opacity-35'
+          }`}
+        >
+          <ChevronLeft className="size-5" aria-hidden="true" />
+        </button>
+
+        {/* Right extremity navigation button */}
+        <button
+          type="button"
+          aria-label="Próximo card"
+          disabled={!canScrollNext}
+          onClick={handleNextCard}
+          className={`absolute right-2.5 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 flex size-11 md:size-12 items-center justify-center rounded-full border border-slate-200/90 bg-white/95 text-[#111827] shadow-[0_8px_24px_-4px_rgba(15,23,42,0.14)] backdrop-blur-md transition-[transform,opacity,background-color,color,border-color] duration-150 ease-emil-out ${
+            canScrollNext
+              ? 'cursor-pointer opacity-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#111827] [@media(hover:hover)_and_(pointer:fine)]:hover:text-white [@media(hover:hover)_and_(pointer:fine)]:hover:border-[#111827] active:scale-95'
+              : 'pointer-events-none opacity-35'
+          }`}
+        >
+          <ChevronRight className="size-5" aria-hidden="true" />
+        </button>
+
+        <div
+          ref={trackRef}
+          style={
+            trackPaddingPx !== null
+              ? {
+                  paddingLeft: `${trackPaddingPx}px`,
+                  paddingRight: `${trackPaddingPx}px`,
+                  scrollPaddingLeft: `${trackPaddingPx}px`,
+                }
+              : undefined
+          }
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 pl-5 pr-5 scroll-pl-5 sm:pl-6 sm:pr-6 sm:scroll-pl-6 md:pl-[max(5.5rem,calc((100%-1152px)/2+1.5rem))] md:pr-[max(5.5rem,calc((100%-1152px)/2+1.5rem))] md:scroll-pl-[max(5.5rem,calc((100%-1152px)/2+1.5rem))] touch-pan-y [scrollbar-width:none]"
+        >
+          {OFFERINGS.map((o) => {
+            return (
+              <article
+                key={o.title}
+                className="offering-card group flex w-[84vw] max-w-[320px] sm:w-[330px] md:w-[395px] md:max-w-none shrink-0 snap-start flex-col gap-2 rounded-3xl border border-slate-100 md:border-transparent bg-[rgba(249,250,251,0.75)] md:bg-[rgba(249,250,251,0.65)] p-[17px] transition-opacity duration-200 ease-emil-out will-change-transform"
+              >
+                <div className="h-[220px] sm:h-[240px] overflow-hidden rounded-2xl bg-[#f3f4f6] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+                  <img
+                    src={o.img}
+                    alt={o.alt}
+                    loading="lazy"
+                    className="offering-card-img size-full object-cover transition-transform duration-500 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105 will-change-transform"
+                  />
+                </div>
+                <h4 className="min-h-[48px] md:min-h-[52px] pt-1 pb-0.5 text-base font-bold leading-6 text-[#111827]">
+                  {o.title}
+                </h4>
+                <p className="min-h-[60px] md:min-h-[64px] py-1.5 text-xs font-semibold leading-4 text-[#374151]">
+                  {o.desc}
+                </p>
+                <div className="mt-auto flex min-h-[44px] items-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => onSelect(o.interest)}
+                    className="min-h-[44px] cursor-pointer rounded-full border border-[#1f2937] px-[18px] py-2.5 text-xs font-semibold leading-4 text-[#1f2937] [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#1f2937] [@media(hover:hover)_and_(pointer:fine)]:hover:text-white active:scale-[0.96] active:bg-[#1f2937] active:text-white transition-[transform,background-color,color] duration-150 ease-emil-out"
+                  >
+                    {o.cta}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
 
       {/* Mobile swipe progress indicators */}
-      <div className="mt-2 flex md:hidden items-center justify-between px-1">
+      <div className="mt-2 flex md:hidden items-center justify-between px-5 sm:px-6">
         <span className="font-mono-tabular text-xs font-medium text-[#6b7280]">
           0{activeIndex + 1} / 0{OFFERINGS.length}
         </span>
