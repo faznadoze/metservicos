@@ -50,10 +50,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F9FC] text-[#17202F]">
+    <div className="min-h-screen flex flex-col bg-white text-[#17202F]">
       {showLoader && <LogoLoader onComplete={() => setShowLoader(false)} />}
 
-      <Header onRequestQuoteClick={() => scrollToSection('orcamento')} />
+      <Header
+        selectedInterest={selectedInterest}
+        onRequestQuoteClick={() => scrollToSection('orcamento')}
+      />
 
       <main className="flex-1">
         <Hero
@@ -72,7 +75,9 @@ export default function App() {
           }
         />
 
-        <BenefitsAndProcess />
+        <BenefitsAndProcess
+          onSelectInterest={(interest) => handleSelectInterest(interest, true)}
+        />
 
         <FAQSection />
 

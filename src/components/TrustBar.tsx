@@ -1,32 +1,42 @@
 import React from 'react';
+import { Sun, ShieldCheck, Sparkles, Compass, CheckCircle2 } from 'lucide-react';
 import { TRUST_BAR_ITEMS } from '../content/landingPage';
 
 export const TrustBar: React.FC = () => {
+  const icons = [Sun, Compass, Sparkles, ShieldCheck, CheckCircle2];
+
   return (
     <section
       aria-label="Diferenciais de confiança"
-      className="bg-white border-b border-slate-200"
+      className="bg-white border-b border-slate-200/80"
     >
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {TRUST_BAR_ITEMS.map((item) => (
-            <div
-              key={item.index}
-              className="flex flex-col justify-between space-y-2 border-t border-slate-200 pt-4 sm:border-t-0 sm:pt-0"
-            >
-              <div className="flex items-baseline gap-2.5">
-                <span className="font-mono-tabular text-xs font-semibold text-[#0582E8]">
-                  {item.index}.
-                </span>
-                <h2 className="font-display text-sm font-bold text-[#17202F]">
-                  {item.title}
-                </h2>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                {item.detail}
-              </p>
-            </div>
-          ))}
+      <div className="max-w-7xl mx-auto px-6 py-7">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Left Caption (matching reference "Trusted by thousand..." block) */}
+          <p className="text-xs text-slate-400 font-medium leading-snug max-w-[220px] shrink-0">
+            Atendimento técnico de confiança para residências, comércios e áreas rurais
+          </p>
+
+          {/* Right Horizontal Trust Marks */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 flex-1">
+            {TRUST_BAR_ITEMS.map((item, idx) => {
+              const Icon = icons[idx % icons.length];
+              return (
+                <div
+                  key={item.index}
+                  className="flex items-center gap-2.5 text-slate-500 hover:text-[#0B1933] transition-colors"
+                >
+                  <Icon aria-hidden="true" className="w-5 h-5 text-slate-400 shrink-0" />
+                  <div>
+                    <h2 className="font-display text-sm font-bold text-slate-700 leading-tight">
+                      {item.title}
+                    </h2>
+                    <p className="text-[11px] text-slate-400 line-clamp-1">{item.detail}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
