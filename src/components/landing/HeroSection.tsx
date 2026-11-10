@@ -156,11 +156,10 @@ export function HeroSection({
 }
 
 const PARTNER_LOGOS_DATA = [
-  { id: 'mana', type: 'img', src: '/assets/figma/logo-mana.svg', alt: 'Maná', className: 'h-7 w-[81px]' },
-  { id: 'megainox', type: 'img', src: '/assets/figma/logo-megainox.svg', alt: 'Mega Inox', className: 'h-7 w-[149px]' },
-  { id: 'styl', type: 'img', src: '/assets/figma/logo-styl.svg', alt: 'Styl', className: 'h-7 w-[90px]' },
-  { id: 'saodefende', type: 'img', src: '/assets/figma/logo-saodefende.svg', alt: 'São Defende', className: 'h-7 w-[101px]' },
-  { id: 'notion', type: 'notion', alt: 'Notion' },
+  { id: 'mana', src: '/assets/figma/logo-mana.svg', alt: 'Maná', className: 'h-7 w-[81px]' },
+  { id: 'megainox', src: '/assets/figma/logo-megainox.svg', alt: 'Mega Inox', className: 'h-7 w-[149px]' },
+  { id: 'styl', src: '/assets/figma/logo-styl.svg', alt: 'Styl', className: 'h-7 w-[90px]' },
+  { id: 'saodefende', src: '/assets/figma/logo-saodefende.svg', alt: 'São Defende', className: 'h-7 w-[101px]' },
 ];
 
 export function PartnerLogos() {
@@ -274,29 +273,14 @@ export function PartnerLogos() {
           >
             {[0, 1].map((copyIndex) => (
               <div key={copyIndex} className="flex items-center gap-10 sm:gap-16 shrink-0">
-                {PARTNER_LOGOS_DATA.map((logo) => {
-                  if (logo.type === 'notion') {
-                    return (
-                      <div key={`${copyIndex}-${logo.id}`} className="flex items-center gap-1.5 shrink-0">
-                        <span className="flex size-5 items-center justify-center border-2 border-black font-serif text-xs font-bold text-[#1f2937]">
-                          N
-                        </span>
-                        <span className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#1f2937]">
-                          Notion
-                        </span>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <img
-                      key={`${copyIndex}-${logo.id}`}
-                      src={logo.src}
-                      alt={logo.alt}
-                      className={`${logo.className} object-contain shrink-0`}
-                    />
-                  );
-                })}
+                {PARTNER_LOGOS_DATA.map((logo) => (
+                  <img
+                    key={`${copyIndex}-${logo.id}`}
+                    src={logo.src}
+                    alt={logo.alt}
+                    className={`${logo.className} object-contain shrink-0`}
+                  />
+                ))}
               </div>
             ))}
           </div>
