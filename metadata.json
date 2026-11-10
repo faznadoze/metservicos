@@ -1,0 +1,6 @@
+{
+  "name": "MeT Serviços — Energia Solar e Reformas",
+  "description": "Instalação de painéis solares e limpeza de sistemas fotovoltaicos para residências e empresas. Solicite uma avaliação personalizada com a MeT Serviços.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
