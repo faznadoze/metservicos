@@ -190,7 +190,7 @@ export const LeadFormSection: React.FC<LeadFormSectionProps> = ({
                       </h3>
                       <p className="text-sm text-slate-600 leading-relaxed">
                         Preparamos o resumo da sua solicitação para agilizar seu atendimento. Clique
-                        no botão abaixo para enviar diretamente no WhatsApp da MeT Serviços.
+                        no botão abaixo para enviar diretamente no WhatsApp da M&amp;T Serviços.
                       </p>
                     </div>
                   </div>

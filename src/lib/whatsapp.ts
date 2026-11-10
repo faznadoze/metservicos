@@ -31,7 +31,7 @@ export function composeLeadWhatsAppMessage(payload: LeadSubmissionPayload): stri
       ? 'Olá! Quero solicitar um orçamento para instalação de energia solar.'
       : payload.interest === 'limpeza'
         ? 'Olá! Quero agendar uma avaliação/limpeza do meu sistema fotovoltaico.'
-        : 'Olá! Gostaria de receber orientação da MeT Serviços.';
+        : 'Olá! Gostaria de receber orientação da M&T Serviços.';
 
   const lines = [
     baseIntro,

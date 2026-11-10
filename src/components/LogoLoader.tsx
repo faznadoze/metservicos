@@ -139,7 +139,7 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({ onComplete }) => {
       ref={containerRef}
       role="status"
       aria-live="polite"
-      aria-label="Carregando MeT Serviços"
+      aria-label="Carregando M&T Serviços"
       className="fixed inset-0 z-50 overflow-hidden bg-white select-none"
     >
       {/* Centro da tela: Animação do logo se formando */}

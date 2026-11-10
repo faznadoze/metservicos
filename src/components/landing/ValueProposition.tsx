@@ -122,8 +122,14 @@ export function ValueProposition() {
   const handleTabClick = (targetAudience: Audience) => {
     const st = scrollTriggerRef.current;
     if (st && st.vars.pin) {
-      const targetScroll = targetAudience === 'residencias' ? st.start + 6 : st.end - 6;
-      window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      const targetScroll = targetAudience === 'residencias' ? st.start + 4 : st.end - 4;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      gsap.to(window, {
+        duration: reduceMotion ? 0 : 0.46,
+        scrollTo: { y: targetScroll, autoKill: true },
+        ease: 'power3.out',
+        overwrite: 'auto',
+      });
     }
     audienceRef.current = targetAudience;
     setAudience(targetAudience);
@@ -158,7 +164,7 @@ export function ValueProposition() {
                         trigger: statementHighlightRef.current,
                         start: 'top 80%',
                         end: 'bottom 45%',
-                        scrub: 0.6,
+                        scrub: 0.5,
                       },
                     }
                   );
@@ -166,18 +172,23 @@ export function ValueProposition() {
               });
             }
 
-            gsap.from('.vp-reveal', {
-              y: 24,
-              autoAlpha: 0,
-              duration: 0.65,
-              stagger: 0.12,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: interactiveBlockRef.current,
-                start: 'top 82%',
-                toggleActions: 'play none none none',
-              },
-            });
+            gsap.fromTo(
+              '.vp-reveal',
+              { y: 24, autoAlpha: 0 },
+              {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: 'power3.out',
+                clearProps: 'transform,opacity,visibility',
+                scrollTrigger: {
+                  trigger: interactiveBlockRef.current,
+                  start: 'top 85%',
+                  toggleActions: 'play none none none',
+                },
+              }
+            );
           }
 
           if (
@@ -204,7 +215,7 @@ export function ValueProposition() {
             }
 
             gsap.set(resItems, { autoAlpha: 1, y: 0, filter: 'blur(0px)' });
-            gsap.set(comItems, { autoAlpha: 0, y: 20, filter: 'blur(4px)' });
+            gsap.set(comItems, { autoAlpha: 0, y: 16, filter: 'blur(3px)' });
             gsap.set(panelComercioRef.current, { autoAlpha: 1 });
 
             const syncPillGeometry = () => {
@@ -223,15 +234,27 @@ export function ValueProposition() {
             ScrollTrigger.addEventListener('refreshInit', syncPillGeometry);
 
             const tl = gsap.timeline({
-              defaults: { ease: 'power2.inOut' },
+              defaults: { ease: 'sine.inOut' },
               scrollTrigger: {
                 trigger: pinWrapperRef.current,
-                start: 'center center',
-                end: '+=680',
+                start: () => {
+                  const elH = pinWrapperRef.current?.offsetHeight ?? 480;
+                  const topPx = Math.max(76, Math.round((window.innerHeight - elH) / 2));
+                  return `top ${topPx}px`;
+                },
+                end: '+=640',
                 pin: true,
                 pinSpacing: true,
                 anticipatePin: 1,
-                scrub: 0.35,
+                refreshPriority: 10,
+                scrub: 0.3,
+                snap: {
+                  snapTo: [0, 1],
+                  duration: { min: 0.16, max: 0.34 },
+                  delay: 0.06,
+                  ease: 'power2.out',
+                  directional: false,
+                },
                 invalidateOnRefresh: true,
                 onUpdate: (self) => {
                   const next: Audience = self.progress >= 0.5 ? 'comercio' : 'residencias';
@@ -246,7 +269,7 @@ export function ValueProposition() {
             scrollTriggerRef.current = tl.scrollTrigger ?? null;
 
             // Brief initial hold so user sees '01. Para Residências' centered before transition starts
-            tl.to({}, { duration: 0.14 }, 0);
+            tl.to({}, { duration: 0.12 }, 0);
 
             // Scrub active pill smoothly from tab 01 to tab 02
             tl.fromTo(
@@ -266,12 +289,12 @@ export function ValueProposition() {
                   (tabResidenciasRef.current?.offsetTop ?? 0),
                 width: () => tabComercioRef.current?.offsetWidth ?? 0,
                 height: () => tabComercioRef.current?.offsetHeight ?? 0,
-                duration: 0.72,
+                duration: 0.76,
               },
-              0.14
+              0.12
             );
 
-            // Scrub '01. Para Residências' items out
+            // Overlapping crossfade: '01. Para Residências' items scrub out (0.14 -> 0.58)
             tl.fromTo(
               resItems,
               {
@@ -281,34 +304,35 @@ export function ValueProposition() {
               },
               {
                 autoAlpha: 0,
-                y: -18,
-                filter: 'blur(4px)',
-                stagger: 0.045,
-                duration: 0.38,
+                y: -14,
+                filter: 'blur(3px)',
+                stagger: 0.03,
+                duration: 0.44,
               },
               0.14
             );
 
-            // Scrub '02. Comércios e Rural' items in smoothly as scroll continues
+            // Overlapping crossfade: '02. Comércios e Rural' items scrub in (0.28 -> 0.72)
+            // so at midpoint (progress = 0.5) both panels overlap with balanced visual density
             tl.fromTo(
               comItems,
               {
                 autoAlpha: 0,
-                y: 18,
-                filter: 'blur(4px)',
+                y: 14,
+                filter: 'blur(3px)',
               },
               {
                 autoAlpha: 1,
                 y: 0,
                 filter: 'blur(0px)',
-                stagger: 0.045,
-                duration: 0.42,
+                stagger: 0.03,
+                duration: 0.44,
               },
-              0.42
+              0.28
             );
 
             // Brief end hold so '02. Comércios e Rural' settles cleanly before unpinning
-            tl.to({}, { duration: 0.14 }, 0.86);
+            tl.to({}, { duration: 0.12 }, 0.88);
 
             return () => {
               ScrollTrigger.removeEventListener('refreshInit', syncPillGeometry);
@@ -358,7 +382,7 @@ export function ValueProposition() {
           type="button"
           aria-expanded={false}
           onClick={() => handleOpenChange(audienceKey, i)}
-          className={`vp-accordion-item ${itemClass} group flex min-h-[54px] cursor-pointer items-center justify-between gap-3 border-b border-[#e5e7eb] pt-4 pb-4 text-left [@media(hover:hover)_and_(pointer:fine)]:hover:border-[#9ca3af] active:scale-[0.985] transition-[border-color,transform] duration-150 ease-emil-out will-change-transform`}
+          className={`vp-accordion-item ${itemClass} group flex min-h-[54px] cursor-pointer items-center justify-between gap-3 border-b border-[#e5e7eb] pt-4 pb-4 text-left [@media(hover:hover)_and_(pointer:fine)]:hover:border-[#9ca3af] transition-colors duration-150 ease-emil-out will-change-transform`}
         >
           <span className="flex items-center gap-3 sm:gap-4 text-base font-bold leading-6 text-[#111827]">
             <span className="font-mono-tabular">{n}</span>

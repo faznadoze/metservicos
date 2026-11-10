@@ -270,7 +270,7 @@ export const Hero: React.FC<HeroProps> = ({ selectedInterest, onSelectInterest }
             <div className="w-10 h-10 rounded-xl bg-white p-1 shrink-0">
               <img
                 src={COMPANY_CONFIG.logoPath}
-                alt="Símbolo oficial da MeT Serviços"
+                alt="Símbolo oficial da M&T Serviços"
                 width={36}
                 height={36}
                 referrerPolicy="no-referrer"

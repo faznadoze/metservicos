@@ -44,8 +44,8 @@ const OFFERINGS: {
     title: 'Atendimento Residencial, Comercial e Rural',
     desc: 'Soluções dimensionadas para residências, comércios e propriedades rurais, sempre respeitando as características estruturais de cada telhado.',
     cta: 'Conferir atendimento na região →',
-    img: '/assets/figma/card-residencial.png',
-    alt: 'Instalação fotovoltaica em telhado residencial e comercial',
+    img: '/assets/aistudio/manutencao_0a63f7b0.jpg',
+    alt: 'Técnico da M&T Serviços realizando avaliação e manutenção elétrica em inversor solar',
     interest: 'duvida',
   },
 ];
@@ -54,6 +54,7 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
   const sectionRef = useRef<HTMLElement>(null);
   const alignGuideRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const targetScrollLeftRef = useRef<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
@@ -112,47 +113,72 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
     return { positions, maxScroll };
   };
 
-  const scrollToCard = (index: number) => {
+  const animateTrackTo = (targetLeft: number, nextIndex: number) => {
     const el = trackRef.current;
     if (!el) return;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const clamped = Math.min(Math.max(0, targetLeft), maxScroll);
+    targetScrollLeftRef.current = clamped;
+    setActiveIndex(nextIndex);
+    setCanScrollPrev(clamped > 6);
+    setCanScrollNext(clamped < maxScroll - 6);
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      el.scrollLeft = clamped;
+      targetScrollLeftRef.current = null;
+      return;
+    }
+
+    // Temporarily suspend CSS scroll-snap during GSAP tween so mandatory snap never fights button navigation
+    el.style.scrollSnapType = 'none';
+    gsap.to(el, {
+      scrollLeft: clamped,
+      duration: 0.4,
+      ease: 'power3.out',
+      overwrite: 'auto',
+      onComplete: () => {
+        el.style.scrollSnapType = '';
+        targetScrollLeftRef.current = null;
+      },
+      onInterrupt: () => {
+        el.style.scrollSnapType = '';
+        targetScrollLeftRef.current = null;
+      },
+    });
+  };
+
+  const scrollToCard = (index: number) => {
     const { positions } = getCardSnapPositions();
-    const targetLeft = positions[index] ?? 0;
-    el.scrollTo({ left: targetLeft, behavior: 'smooth' });
-    setActiveIndex(index);
+    animateTrackTo(positions[index] ?? 0, index);
   };
 
   const handlePrevCard = () => {
     const el = trackRef.current;
     if (!el) return;
     const { positions } = getCardSnapPositions();
-    const current = el.scrollLeft;
-    // Find the closest distinct snap position strictly to the left of current scrollLeft
+    const current = targetScrollLeftRef.current ?? el.scrollLeft;
     for (let i = positions.length - 1; i >= 0; i--) {
-      if (positions[i] < current - 10) {
-        el.scrollTo({ left: positions[i], behavior: 'smooth' });
-        setActiveIndex(i);
+      if (positions[i] < current - 8) {
+        animateTrackTo(positions[i], i);
         return;
       }
     }
-    el.scrollTo({ left: 0, behavior: 'smooth' });
-    setActiveIndex(0);
+    animateTrackTo(0, 0);
   };
 
   const handleNextCard = () => {
     const el = trackRef.current;
     if (!el) return;
     const { positions, maxScroll } = getCardSnapPositions();
-    const current = el.scrollLeft;
-    // Find the closest distinct snap position strictly to the right of current scrollLeft
+    const current = targetScrollLeftRef.current ?? el.scrollLeft;
     for (let i = 0; i < positions.length; i++) {
-      if (positions[i] > current + 10) {
-        el.scrollTo({ left: positions[i], behavior: 'smooth' });
-        setActiveIndex(i);
+      if (positions[i] > current + 8) {
+        animateTrackTo(positions[i], i);
         return;
       }
     }
-    el.scrollTo({ left: maxScroll, behavior: 'smooth' });
-    setActiveIndex(OFFERINGS.length - 1);
+    animateTrackTo(maxScroll, OFFERINGS.length - 1);
   };
 
   useGSAP(
@@ -168,39 +194,40 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
           if (ctx.conditions?.reduceMotion) return;
 
           const cards = gsap.utils.toArray<HTMLElement>('.offering-card', sectionRef.current);
-          gsap.set(cards, { y: 32, autoAlpha: 0 });
-
-          ScrollTrigger.batch(cards, {
-            interval: 0.1,
-            batchMax: 4,
-            start: 'top 85%',
-            onEnter: (batch) => {
-              gsap.to(batch, {
-                y: 0,
-                autoAlpha: 1,
-                duration: 0.55,
-                stagger: 0.08,
-                ease: 'power3.out',
-                overwrite: true,
-                clearProps: 'opacity,visibility',
-              });
-            },
-          });
-
-          // Subtle window parallax on card images
-          const cardImgs = gsap.utils.toArray<HTMLElement>('.offering-card-img', sectionRef.current);
           gsap.fromTo(
-            cardImgs,
-            { yPercent: -4, scale: 1.05 },
+            cards,
+            { y: 28, autoAlpha: 0 },
+            {
+              y: 0,
+              autoAlpha: 1,
+              duration: 0.55,
+              stagger: 0.08,
+              ease: 'power3.out',
+              clearProps: 'transform,opacity,visibility',
+              scrollTrigger: {
+                trigger: sectionRef.current,
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+              },
+            }
+          );
+
+          // Subtle window parallax on card image wrappers (decoupled from img group-hover:scale-105)
+          const cardParallaxWrappers = gsap.utils.toArray<HTMLElement>(
+            '.offering-card-parallax',
+            sectionRef.current
+          );
+          gsap.fromTo(
+            cardParallaxWrappers,
+            { yPercent: -4 },
             {
               yPercent: 4,
-              scale: 1,
               ease: 'none',
               scrollTrigger: {
                 trigger: sectionRef.current,
                 start: 'top bottom',
                 end: 'bottom top',
-                scrub: 1,
+                scrub: 0.6,
               },
             }
           );
@@ -232,7 +259,7 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
           aria-label="Card anterior"
           disabled={!canScrollPrev}
           onClick={handlePrevCard}
-          className={` absolute left-2.5 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 flex size-11 md:size-12 items-center justify-center rounded-full border border-slate-200/90 bg-white/95 text-[#111827] shadow-[0_8px_24px_-4px_rgba(15,23,42,0.14)] backdrop-blur-md transition-[transform,opacity,background-color,color,border-color] duration-150 ease-emil-out ${
+          className={`absolute left-2.5 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 flex size-11 md:size-12 items-center justify-center rounded-full border border-slate-200/90 bg-white/95 text-[#111827] shadow-[0_8px_24px_-4px_rgba(15,23,42,0.14)] backdrop-blur-md transition-[transform,opacity,background-color,color,border-color] duration-150 ease-emil-out ${
             canScrollPrev
               ? 'cursor-pointer opacity-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#111827] [@media(hover:hover)_and_(pointer:fine)]:hover:text-white [@media(hover:hover)_and_(pointer:fine)]:hover:border-[#111827] active:scale-95'
               : 'pointer-events-none opacity-35'
@@ -276,12 +303,14 @@ export function OfferingsCarousel({ onSelect }: { onSelect: (i: ServiceInterest)
                 className="offering-card group flex w-[84vw] max-w-[320px] sm:w-[330px] md:w-[395px] md:max-w-none shrink-0 snap-start flex-col gap-2 rounded-3xl border border-slate-100 md:border-transparent bg-[rgba(249,250,251,0.75)] md:bg-[rgba(249,250,251,0.65)] p-[17px] transition-opacity duration-200 ease-emil-out will-change-transform"
               >
                 <div className="h-[220px] sm:h-[240px] overflow-hidden rounded-2xl bg-[#f3f4f6] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                  <img
-                    src={o.img}
-                    alt={o.alt}
-                    loading="lazy"
-                    className="offering-card-img size-full object-cover transition-transform duration-500 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105 will-change-transform"
-                  />
+                  <div className="offering-card-parallax size-full scale-110 will-change-transform">
+                    <img
+                      src={o.img}
+                      alt={o.alt}
+                      loading="lazy"
+                      className="offering-card-img size-full object-cover transition-transform duration-500 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
+                    />
+                  </div>
                 </div>
                 <h4 className="min-h-[48px] md:min-h-[52px] pt-1 pb-0.5 text-base font-bold leading-6 text-[#111827]">
                   {o.title}
@@ -379,9 +408,31 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
     const cards = el.querySelectorAll<HTMLElement>('.process-step-card');
     const targetCard = cards[index];
     if (!targetCard) return;
-    const targetLeft = targetCard.offsetLeft - (el.clientWidth - targetCard.clientWidth) / 2;
-    el.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    const targetLeft = Math.max(
+      0,
+      targetCard.offsetLeft - (el.clientWidth - targetCard.clientWidth) / 2
+    );
     setActive(index);
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      el.scrollLeft = targetLeft;
+      return;
+    }
+
+    el.style.scrollSnapType = 'none';
+    gsap.to(el, {
+      scrollLeft: targetLeft,
+      duration: 0.4,
+      ease: 'power3.out',
+      overwrite: 'auto',
+      onComplete: () => {
+        el.style.scrollSnapType = '';
+      },
+      onInterrupt: () => {
+        el.style.scrollSnapType = '';
+      },
+    });
   };
 
   useGSAP(
@@ -405,36 +456,45 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
             },
           });
 
-          tl.from('.process-header-item', {
-            y: 20,
-            autoAlpha: 0,
-            duration: 0.55,
-            stagger: 0.08,
-          }).from(
-            '.process-step-card',
+          tl.fromTo(
+            '.process-header-item',
+            { y: 20, autoAlpha: 0 },
             {
-              y: 30,
-              autoAlpha: 0,
+              y: 0,
+              autoAlpha: 1,
+              duration: 0.55,
+              stagger: 0.08,
+              clearProps: 'transform,opacity,visibility',
+            }
+          ).fromTo(
+            '.process-step-card',
+            { y: 30, autoAlpha: 0 },
+            {
+              y: 0,
+              autoAlpha: 1,
               duration: 0.55,
               stagger: 0.1,
+              clearProps: 'transform,opacity,visibility',
             },
             '-=0.25'
           );
 
-          // Subtle window parallax on process step images
-          const stepImgs = gsap.utils.toArray<HTMLElement>('.process-step-img', sectionRef.current);
+          // Subtle window parallax on process step image wrappers (decoupled from img group-hover:scale-105)
+          const stepParallaxWrappers = gsap.utils.toArray<HTMLElement>(
+            '.process-step-parallax',
+            sectionRef.current
+          );
           gsap.fromTo(
-            stepImgs,
-            { yPercent: -4, scale: 1.04 },
+            stepParallaxWrappers,
+            { yPercent: -4 },
             {
               yPercent: 4,
-              scale: 1,
               ease: 'none',
               scrollTrigger: {
                 trigger: sectionRef.current,
                 start: 'top bottom',
                 end: 'bottom top',
-                scrub: 1,
+                scrub: 0.6,
               },
             }
           );
@@ -473,12 +533,14 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
               className="process-step-card group flex w-[84vw] max-w-[330px] md:w-auto md:max-w-none md:flex-1 shrink-0 snap-center flex-col rounded-3xl border border-white/10 bg-white/[0.03] md:border-transparent md:bg-transparent p-5 sm:p-6 transition-colors duration-200 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/[0.03] will-change-transform"
             >
               <div className="mb-5 h-44 sm:h-48 overflow-hidden rounded-2xl bg-[#1c1c1c]">
-                <img
-                  src={s.img}
-                  alt={s.alt}
-                  loading="lazy"
-                  className="process-step-img size-full object-cover transition-transform duration-500 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105 will-change-transform"
-                />
+                <div className="process-step-parallax size-full scale-110 will-change-transform">
+                  <img
+                    src={s.img}
+                    alt={s.alt}
+                    loading="lazy"
+                    className="process-step-img size-full object-cover transition-transform duration-500 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
+                  />
+                </div>
               </div>
               <p className="mb-2 text-[11px] font-semibold uppercase leading-[16.5px] tracking-[0.275px] text-[#78b6e9]">
                 {s.tag}

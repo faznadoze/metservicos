@@ -6,14 +6,22 @@ import { SplitText } from 'gsap/SplitText';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
-export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
+export function HeroSection({
+  onCtaClick,
+  isReady = true,
+}: {
+  onCtaClick: () => void;
+  isReady?: boolean;
+}) {
   const sectionRef = useRef<HTMLElement>(null);
+  const bgParallaxRef = useRef<HTMLDivElement>(null);
   const bgImgRef = useRef<HTMLImageElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const ctaBtnRef = useRef<HTMLButtonElement>(null);
 
   useGSAP(
     () => {
+      if (!isReady) return;
       const mm = gsap.matchMedia();
 
       mm.add(
@@ -32,8 +40,8 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
 
           introTl.fromTo(
             bgImgRef.current,
-            { scale: 1.08 },
-            { scale: 1, duration: 1.4, ease: 'power2.out' },
+            { scale: 1.18 },
+            { scale: 1.1, duration: 1.35, ease: 'power2.out' },
             0
           );
 
@@ -50,7 +58,7 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
                 return gsap.from(self.words, {
                   yPercent: 115,
                   autoAlpha: 0,
-                  duration: 0.75,
+                  duration: 0.72,
                   stagger: 0.045,
                   ease: 'power3.out',
                   onComplete: () => {
@@ -63,33 +71,39 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
             });
           }
 
-          introTl.from(
+          introTl.fromTo(
             ctaBtnRef.current,
+            { y: 20, autoAlpha: 0 },
             {
-              y: 20,
-              autoAlpha: 0,
-              duration: 0.6,
+              y: 0,
+              autoAlpha: 1,
+              duration: 0.55,
+              clearProps: 'transform,opacity,visibility',
             },
-            0.38
+            0.35
           );
 
-          // Scroll-linked parallax on hero background image
-          gsap.to(bgImgRef.current, {
-            yPercent: 14,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top top',
-              end: 'bottom top',
-              scrub: true,
-            },
-          });
+          // Scroll-linked parallax on wrapper (decoupled from bgImgRef scale so they never fight or expose edges)
+          gsap.fromTo(
+            bgParallaxRef.current,
+            { yPercent: -4 },
+            {
+              yPercent: 6,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: sectionRef.current,
+                start: 'top top',
+                end: 'bottom top',
+                scrub: true,
+              },
+            }
+          );
         }
       );
 
       return () => mm.revert();
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [isReady] }
   );
 
   return (
@@ -98,12 +112,14 @@ export function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
       ref={sectionRef}
       className="relative flex min-h-[100svh] md:min-h-[736px] md:h-[865px] items-start justify-center overflow-hidden pt-[132px] sm:pt-[160px] md:pt-[192px] pb-20 md:pb-[120px]"
     >
-      <img
-        ref={bgImgRef}
-        src="/assets/figma/hero.png"
-        alt="Sistema fotovoltaico instalado em telhado"
-        className="absolute inset-0 size-full object-cover object-[center_60%] will-change-transform"
-      />
+      <div ref={bgParallaxRef} className="absolute inset-0 size-full will-change-transform">
+        <img
+          ref={bgImgRef}
+          src="/assets/figma/hero.png"
+          alt="Sistema fotovoltaico instalado em telhado"
+          className="size-full scale-110 object-cover object-[center_60%] will-change-transform"
+        />
+      </div>
       <div
         aria-hidden
         className="absolute inset-0"

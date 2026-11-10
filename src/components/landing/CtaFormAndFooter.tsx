@@ -24,6 +24,7 @@ interface Props {
 
 export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
+  const bannerParallaxRef = useRef<HTMLDivElement>(null);
   const bannerImgRef = useRef<HTMLImageElement>(null);
   const nameFieldRef = useRef<HTMLLabelElement>(null);
   const cityFieldRef = useRef<HTMLLabelElement>(null);
@@ -58,40 +59,36 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
             },
           });
 
-          tl.from('.cta-banner-card', {
-            y: 20,
-            autoAlpha: 0,
-            duration: 0.6,
-          })
+          tl.fromTo(
+            '.cta-banner-card',
+            { y: 20, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.6, clearProps: 'transform,opacity,visibility' }
+          )
             .fromTo(
               bannerImgRef.current,
-              { scale: 1.1 },
-              { scale: 1, duration: 1.0, ease: 'power2.out' },
+              { scale: 1.18 },
+              { scale: 1.1, duration: 1.0, ease: 'power2.out' },
               0
             )
-            .from(
+            .fromTo(
               '.cta-form-col',
-              {
-                y: 20,
-                autoAlpha: 0,
-                duration: 0.6,
-              },
+              { y: 20, autoAlpha: 0 },
+              { y: 0, autoAlpha: 1, duration: 0.6, clearProps: 'transform,opacity,visibility' },
               0.1
             );
 
-          // Subtle window parallax on the solar banner image
+          // Subtle window parallax on wrapper (decoupled from bannerImgRef scale so they never fight or expose edges)
           gsap.fromTo(
-            bannerImgRef.current,
-            { yPercent: -6, scale: 1.08 },
+            bannerParallaxRef.current,
+            { yPercent: -5 },
             {
-              yPercent: 6,
-              scale: 1,
+              yPercent: 5,
               ease: 'none',
               scrollTrigger: {
                 trigger: sectionRef.current,
                 start: 'top bottom',
                 end: 'bottom top',
-                scrub: 1,
+                scrub: 0.6,
               },
             }
           );
@@ -138,7 +135,7 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
     }
 
     const msg = [
-      'Olá! Gostaria de receber orientação da MeT Serviços.',
+      'Olá! Gostaria de receber orientação da M&T Serviços.',
       '',
       `*Nome:* ${name.trim()}`,
       `*Cidade/Estado:* ${city.trim()}`,
@@ -157,13 +154,15 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
       <div className="mx-auto flex w-full max-w-[1200px] flex-col lg:flex-row items-stretch justify-center gap-8">
         {/* Banner Card */}
         <div className="cta-banner-card relative flex w-full lg:flex-1 min-h-[280px] sm:min-h-[360px] lg:min-h-[440px] items-center justify-center overflow-hidden rounded-[24px] will-change-transform shadow-[0px_1px_2px_rgba(0,0,0,0.05)]">
-          <img
-            ref={bannerImgRef}
-            src="/assets/figma/banner-cta.png"
-            alt="Painéis solares ao pôr do sol"
-            loading="lazy"
-            className="absolute inset-0 size-full object-cover will-change-transform"
-          />
+          <div ref={bannerParallaxRef} className="absolute inset-0 size-full will-change-transform">
+            <img
+              ref={bannerImgRef}
+              src="/assets/figma/banner-cta.png"
+              alt="Painéis solares ao pôr do sol"
+              loading="lazy"
+              className="size-full scale-110 object-cover will-change-transform"
+            />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.65)] via-[rgba(0,0,0,0.25)] to-[rgba(0,0,0,0.1)]" />
           <h2 className="relative max-w-[620px] px-6 sm:px-8 text-center text-[26px] sm:text-[36px] md:text-[44px] lg:text-[46px] font-bold leading-[1.15] tracking-[-0.8px] md:tracking-[-1px] text-white">
             Transforme a luz do sol em mais controle sobre a sua conta de energia
@@ -176,7 +175,7 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
             Pronto para dar o próximo passo com mais segurança?
           </h3>
           <p className="text-xs leading-[19.5px] text-[#6b7280]">
-            Conte brevemente o que você precisa. A equipe da MeT Serviços entra em contato para entender o cenário e
+            Conte brevemente o que você precisa. A equipe da M&amp;T Serviços entra em contato para entender o cenário e
             indicar o caminho mais adequado.
           </p>
 
@@ -246,7 +245,7 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
                 className="mt-0.5 size-4.5 md:size-4 shrink-0 rounded border-[#767676] accent-[#227cc5] cursor-pointer active:scale-90 transition-transform duration-100 ease-emil-out"
               />
               <span className="text-xs md:text-[11px] leading-[16px] md:leading-[14px] text-[#6b7280]">
-                Concordo em receber contato da MeT Serviços pelo WhatsApp ou telefone conforme a{' '}
+                Concordo em receber contato da M&amp;T Serviços pelo WhatsApp ou telefone conforme a{' '}
                 <button
                   type="button"
                   onClick={onOpenPrivacyModal}
@@ -298,18 +297,23 @@ export function MainFooter() {
         (ctx) => {
           if (ctx.conditions?.reduceMotion) return;
 
-          gsap.from('.footer-reveal-block', {
-            y: 20,
-            autoAlpha: 0,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: footerRef.current,
-              start: 'top 92%',
-              toggleActions: 'play none none none',
-            },
-          });
+          gsap.fromTo(
+            '.footer-reveal-block',
+            { y: 20, autoAlpha: 0 },
+            {
+              y: 0,
+              autoAlpha: 1,
+              duration: 0.55,
+              stagger: 0.1,
+              ease: 'power3.out',
+              clearProps: 'transform,opacity,visibility',
+              scrollTrigger: {
+                trigger: footerRef.current,
+                start: 'top 92%',
+                toggleActions: 'play none none none',
+              },
+            }
+          );
         }
       );
 

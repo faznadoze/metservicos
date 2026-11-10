@@ -45,7 +45,7 @@ export interface CommitmentItem {
 }
 
 export const COMPANY_CONFIG = {
-  brandName: 'MeT Serviços',
+  brandName: 'M&T Serviços',
   legalDescriptor: 'Energia Solar e Reformas',
   essence: 'Energia solar instalada, cuidada e explicada por quem entende.',
   whatsappNumber: '5548999698995',

@@ -31,7 +31,7 @@ export const BenefitsAndProcess: React.FC<BenefitsAndProcessProps> = ({
             className="font-display font-bold text-white tracking-tight leading-[1.12]"
             style={{ fontSize: 'clamp(2rem, 3.8vw, 3.25rem)' }}
           >
-            Acompanhe cada etapa do atendimento com transparência e cuidado técnico na MeT Serviços.
+            Acompanhe cada etapa do atendimento com transparência e cuidado técnico na M&amp;T Serviços.
           </h2>
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
             Do primeiro chamado pelo WhatsApp até a execução no seu telhado, você sabe exatamente o

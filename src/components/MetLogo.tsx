@@ -14,7 +14,7 @@ interface MetLogoProps {
 export const MetLogo: React.FC<MetLogoProps> = ({
   className = 'w-10 h-10',
   variant = 'transparent',
-  title = 'Logotipo MeT Serviços — Energia Solar e Reformas',
+  title = 'Logotipo M&T Serviços — Energia Solar e Reformas',
 }) => {
   const houseFill = variant === 'inverted' ? '#FFFFFF' : '#1B2E51';
   const panelFill = variant === 'inverted' ? '#38BDF8' : '#0582E8';
