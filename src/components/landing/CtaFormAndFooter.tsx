@@ -1,44 +1,19 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { COMPANY_CONFIG, ServiceInterest } from '../../content/landingPage';
-import { buildServiceWhatsAppUrl, buildWhatsAppUrl } from '../../lib/whatsapp';
+import { COMPANY_CONFIG } from '../../content/landingPage';
+import { buildServiceWhatsAppUrl } from '../../lib/whatsapp';
 import { trackEvent } from '../../lib/analytics';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const INTEREST_LABELS: Record<ServiceInterest, string> = {
-  instalacao: 'Instalação de painéis solares',
-  limpeza: 'Limpeza de sistema fotovoltaico',
-  duvida: 'Ainda não sei / Quero orientação',
-};
-
-const inputCls =
-  'w-full min-h-[48px] md:min-h-0 rounded-xl border border-[#e5e7eb] bg-white px-[17px] pt-[13px] pb-[14px] text-base md:text-xs text-[#1f2937] placeholder:text-[#9ca3af] outline-none shadow-xs focus:border-[#227cc5] focus:ring-2 focus:ring-[#b7dcfb] transition-[border-color,box-shadow] duration-150 ease-emil-out';
-
-interface Props {
-  selectedInterest: ServiceInterest;
-  onOpenPrivacyModal: () => void;
-}
-
-export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) {
+export function CtaFormSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const bannerParallaxRef = useRef<HTMLDivElement>(null);
   const bannerImgRef = useRef<HTMLImageElement>(null);
-  const nameFieldRef = useRef<HTMLLabelElement>(null);
-  const cityFieldRef = useRef<HTMLLabelElement>(null);
-  const consentFieldRef = useRef<HTMLLabelElement>(null);
 
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('');
-  const [interest, setInterest] = useState<ServiceInterest>(selectedInterest);
-  const [consent, setConsent] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => setInterest(selectedInterest), [selectedInterest]);
-
-  const { contextSafe } = useGSAP(
+  useGSAP(
     () => {
       const mm = gsap.matchMedia();
 
@@ -63,19 +38,12 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
             '.cta-banner-card',
             { y: 20, autoAlpha: 0 },
             { y: 0, autoAlpha: 1, duration: 0.6, clearProps: 'transform,opacity,visibility' }
-          )
-            .fromTo(
-              bannerImgRef.current,
-              { scale: 1.18 },
-              { scale: 1.1, duration: 1.0, ease: 'power2.out' },
-              0
-            )
-            .fromTo(
-              '.cta-form-col',
-              { y: 20, autoAlpha: 0 },
-              { y: 0, autoAlpha: 1, duration: 0.6, clearProps: 'transform,opacity,visibility' },
-              0.1
-            );
+          ).fromTo(
+            bannerImgRef.current,
+            { scale: 1.18 },
+            { scale: 1.1, duration: 1.0, ease: 'power2.out' },
+            0
+          );
 
           // Subtle window parallax on wrapper (decoupled from bannerImgRef scale so they never fight or expose edges)
           gsap.fromTo(
@@ -100,60 +68,14 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
     { scope: sectionRef }
   );
 
-  const shakeInvalidFields = contextSafe((invalidKeys: Record<string, string>) => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    const targets: HTMLElement[] = [];
-    if (invalidKeys.name && nameFieldRef.current) targets.push(nameFieldRef.current);
-    if (invalidKeys.city && cityFieldRef.current) targets.push(cityFieldRef.current);
-    if (invalidKeys.consent && consentFieldRef.current) targets.push(consentFieldRef.current);
-
-    if (targets.length > 0) {
-      gsap.fromTo(
-        targets,
-        { x: -6 },
-        {
-          x: 0,
-          duration: 0.3,
-          ease: 'elastic.out(1.2, 0.3)',
-          clearProps: 'x',
-        }
-      );
-    }
-  });
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const next: Record<string, string> = {};
-    if (name.trim().length < 2) next.name = 'Informe seu nome.';
-    if (city.trim().length < 2) next.city = 'Informe sua cidade.';
-    if (!consent) next.consent = 'É necessário concordar para continuar.';
-    setErrors(next);
-    if (Object.keys(next).length) {
-      shakeInvalidFields(next);
-      return;
-    }
-
-    const msg = [
-      'Olá! Gostaria de receber orientação da M&T Serviços.',
-      '',
-      `*Nome:* ${name.trim()}`,
-      `*Cidade/Estado:* ${city.trim()}`,
-      `*Interesse:* ${INTEREST_LABELS[interest]}`,
-    ].join('\n');
-    trackEvent('submit_lead_form' as never);
-    window.open(buildWhatsAppUrl(msg), '_blank', 'noopener,noreferrer');
-  };
-
   return (
     <section
       id="orcamento"
       ref={sectionRef}
       className="bg-white px-5 sm:px-6 py-14 md:py-24 overflow-hidden"
     >
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col lg:flex-row items-stretch justify-center gap-8">
-        {/* Banner Card */}
-        <div className="cta-banner-card relative flex w-full lg:flex-1 min-h-[280px] sm:min-h-[360px] lg:min-h-[440px] items-center justify-center overflow-hidden rounded-[24px] will-change-transform shadow-[0px_1px_2px_rgba(0,0,0,0.05)]">
+      <div className="mx-auto w-full max-w-[1200px]">
+        <div className="cta-banner-card relative flex w-full min-h-[340px] sm:min-h-[400px] md:min-h-[440px] flex-col items-center justify-center gap-6 overflow-hidden rounded-[24px] px-6 sm:px-10 py-12 text-center will-change-transform shadow-[0px_1px_2px_rgba(0,0,0,0.05)]">
           <div ref={bannerParallaxRef} className="absolute inset-0 size-full will-change-transform">
             <img
               ref={bannerImgRef}
@@ -163,108 +85,32 @@ export function CtaFormSection({ selectedInterest, onOpenPrivacyModal }: Props) 
               className="size-full scale-110 object-cover will-change-transform"
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.65)] via-[rgba(0,0,0,0.25)] to-[rgba(0,0,0,0.1)]" />
-          <h2 className="relative max-w-[620px] px-6 sm:px-8 text-center text-[26px] sm:text-[36px] md:text-[44px] lg:text-[46px] font-bold leading-[1.15] tracking-[-0.8px] md:tracking-[-1px] text-white">
-            Transforme a luz do sol em mais controle sobre a sua conta de energia
-          </h2>
-        </div>
-
-        {/* Form Column */}
-        <div className="cta-form-col flex w-full max-w-[512px] flex-col gap-2 self-start will-change-transform shrink-0">
-          <h3 className="font-extrabold uppercase leading-tight tracking-[-0.5px] text-[#111827] text-lg sm:text-[20px]">
-            Pronto para dar o próximo passo com mais segurança?
-          </h3>
-          <p className="text-xs leading-[19.5px] text-[#6b7280]">
-            Conte brevemente o que você precisa. A equipe da M&amp;T Serviços entra em contato para entender o cenário e
-            indicar o caminho mais adequado.
-          </p>
-
-          <form
-            noValidate
-            onSubmit={submit}
-            className="flex flex-col gap-4 rounded-[24px] border border-[rgba(229,231,235,0.8)] bg-[#f9fafb] p-5 sm:p-7 shadow-xs"
-          >
-            <div className="flex flex-col sm:flex-row gap-3.5">
-              <label ref={nameFieldRef} className="flex flex-col gap-1 sm:w-[260px] flex-[1.4]">
-                <span className="text-[11px] font-semibold leading-[16.5px] text-[#374151]">Nome completo</span>
-                <input
-                  className={inputCls}
-                  placeholder="Ex.: Carlos Oliveira"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
-                  enterKeyHint="next"
-                  aria-invalid={!!errors.name}
-                />
-                {errors.name && <span className="text-[11px] text-red-600">{errors.name}</span>}
-              </label>
-              <label ref={cityFieldRef} className="flex flex-1 flex-col gap-1">
-                <span className="text-[11px] font-semibold leading-[16.5px] text-[#374151]">Cidade / Estado</span>
-                <input
-                  className={inputCls}
-                  placeholder="Ex: Criciúma / SC"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  autoComplete="address-level2"
-                  enterKeyHint="done"
-                  aria-invalid={!!errors.city}
-                />
-                {errors.city && <span className="text-[11px] text-red-600">{errors.city}</span>}
-              </label>
-            </div>
-
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold leading-[16.5px] text-[#374151]">Interesse principal</span>
-              <span className="relative">
-                <select
-                  className={`${inputCls} appearance-none py-[13px] pr-10 leading-5 md:leading-4`}
-                  value={interest}
-                  onChange={(e) => setInterest(e.target.value as ServiceInterest)}
-                >
-                  {(Object.keys(INTEREST_LABELS) as ServiceInterest[]).map((k) => (
-                    <option key={k} value={k}>
-                      {INTEREST_LABELS[k]}
-                    </option>
-                  ))}
-                </select>
-                <img
-                  src="/assets/figma/select-chevron.svg"
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="pointer-events-none absolute right-[14px] top-1/2 -translate-y-1/2"
-                />
-              </span>
-            </label>
-
-            <label ref={consentFieldRef} className="flex min-h-[44px] items-start gap-2.5 pt-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 size-4.5 md:size-4 shrink-0 rounded border-[#767676] accent-[#227cc5] cursor-pointer active:scale-90 transition-transform duration-100 ease-emil-out"
-              />
-              <span className="text-xs md:text-[11px] leading-[16px] md:leading-[14px] text-[#6b7280]">
-                Concordo em receber contato da M&amp;T Serviços pelo WhatsApp ou telefone conforme a{' '}
-                <button
-                  type="button"
-                  onClick={onOpenPrivacyModal}
-                  className="cursor-pointer font-semibold underline underline-offset-2 [@media(hover:hover)_and_(pointer:fine)]:hover:text-[#111827] active:text-[#111827] transition-colors"
-                >
-                  Política de Privacidade
-                </button>
-                .
-                {errors.consent && <span className="block pt-0.5 text-red-600">{errors.consent}</span>}
-              </span>
-            </label>
-
-            <button
-              type="submit"
-              className="w-full sm:w-auto sm:self-start min-h-[48px] flex items-center justify-center cursor-pointer rounded-full bg-[#b7dcfb] px-9 py-3.5 text-xs font-bold leading-4 text-[#111827] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#9fcff8] active:scale-[0.97] active:bg-[#8cc4f5] transition-[transform,background-color,box-shadow] duration-150 ease-emil-out shadow-xs"
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(17,24,39,0.82)] via-[rgba(17,24,39,0.45)] to-[rgba(17,24,39,0.2)]" />
+          <div className="relative flex max-w-[680px] flex-col items-center gap-4">
+            <h2 className="text-[26px] sm:text-[36px] md:text-[44px] lg:text-[46px] font-bold leading-[1.15] tracking-[-0.8px] md:tracking-[-1px] text-white">
+              Transforme a luz do sol em mais controle sobre a sua conta de energia
+            </h2>
+            <p className="max-w-[520px] text-sm sm:text-base leading-relaxed text-white/85">
+              Fale direto com a equipe da M&amp;T Serviços pelo WhatsApp para tirar dúvidas, agendar limpeza ou avaliar seu
+              projeto solar.
+            </p>
+            <a
+              href={buildServiceWhatsAppUrl('duvida')}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('click_whatsapp_hero', { source: 'cta_banner' })}
+              className="mt-2 inline-flex min-h-[48px] items-center justify-center gap-2.5 rounded-full bg-[#25D366] px-8 py-3.5 text-sm font-bold leading-5 text-white shadow-[0_12px_28px_-4px_rgba(37,211,102,0.45)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#20bd5a] active:scale-[0.97] transition-[transform,background-color,box-shadow] duration-150 ease-emil-out"
             >
-              Quero receber orientação
-            </button>
-          </form>
+              <img
+                src="/assets/figma/social-3.svg"
+                alt=""
+                width={18}
+                height={18}
+                className="size-4.5 select-none pointer-events-none"
+              />
+              <span>Chamar no WhatsApp</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>
