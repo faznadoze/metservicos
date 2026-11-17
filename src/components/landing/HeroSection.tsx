@@ -110,7 +110,7 @@ export function HeroSection({
     <section
       id="inicio"
       ref={sectionRef}
-      className="relative flex min-h-[100svh] md:min-h-[736px] md:h-[865px] items-start justify-center overflow-hidden pt-[132px] sm:pt-[160px] md:pt-[192px] pb-20 md:pb-[120px]"
+      className="relative flex min-h-[100svh] md:min-h-[736px] md:h-[865px] items-end justify-center overflow-hidden pt-[120px] pb-16 sm:pb-20 md:pb-[96px]"
     >
       <div ref={bgParallaxRef} className="absolute inset-0 size-full will-change-transform">
         <img
@@ -122,10 +122,21 @@ export function HeroSection({
       </div>
       <div
         aria-hidden
-        className="absolute inset-0"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[44%]"
+        style={{
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          maskImage: 'linear-gradient(to top, black 0%, rgba(0,0,0,0.82) 38%, rgba(0,0,0,0.28) 72%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to top, black 0%, rgba(0,0,0,0.82) 38%, rgba(0,0,0,0.28) 72%, transparent 100%)',
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 140% 66% at 50% 16.5%, rgba(17,24,39,0.75) 12%, rgba(17,24,39,0) 100%)',
+            'linear-gradient(to top, rgba(17,24,39,0.88) 0%, rgba(17,24,39,0.62) 38%, rgba(17,24,39,0.12) 72%, rgba(17,24,39,0) 100%)',
         }}
       />
       <div className="relative flex w-full max-w-[896px] flex-col items-center gap-6 px-5 sm:px-6">

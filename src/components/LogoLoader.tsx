@@ -35,26 +35,26 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({ onComplete }) => {
         return;
       }
 
-      // Master timeline with exactly 3s duration for the loading progress
+      // Master timeline with 2s duration for the loading progress
       const tl = gsap.timeline({
         onComplete: () => {
           gsap.to(containerRef.current, {
             autoAlpha: 0,
-            duration: 0.35,
+            duration: 0.28,
             ease: 'power2.inOut',
             onComplete: finishLoader,
           });
         },
       });
 
-      // 1. Progress counter object (0 to 100) running for 3 seconds
+      // 1. Progress counter object (0 to 100) running for 2 seconds
       const progressObj = { value: 0 };
 
       tl.to(
         progressObj,
         {
           value: 100,
-          duration: 3.0,
+          duration: 2.0,
           ease: 'power1.inOut',
           onUpdate: () => {
             const current = Math.round(progressObj.value);
@@ -75,36 +75,36 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({ onComplete }) => {
       gsap.set(sunGroupRef.current, { autoAlpha: 0, scale: 0.2, x: 10, y: 16, transformOrigin: '40px 40px' });
 
       // 3. Logo formation animation
-      // Step A: Foundation Structure (Roof & 'M' house base) forms between 0.1s and 0.9s
+      // Step A: Foundation Structure (Roof & 'M' house base)
       tl.to(
         structureGroupRef.current,
         {
           autoAlpha: 1,
           scale: 1,
           y: 0,
-          duration: 0.8,
+          duration: 0.52,
           ease: 'power3.out',
         },
-        0.1
+        0.06
       );
 
-      // Step B: Photovoltaic panels assemble with smooth stagger between 0.7s and 1.6s
+      // Step B: Photovoltaic panels assemble with smooth stagger
       tl.to(
         '.loader-panel-cell',
         {
           autoAlpha: 1,
           scale: 1,
-          duration: 0.32,
+          duration: 0.22,
           stagger: {
-            each: 0.045,
+            each: 0.03,
             from: 'start',
           },
           ease: 'back.out(1.8)',
         },
-        0.75
+        0.48
       );
 
-      // Step C: O SOL APARECENDO POR ÚLTIMO (The Sun appears last between 1.6s and 2.5s)
+      // Step C: O SOL APARECENDO POR ÚLTIMO
       tl.to(
         sunGroupRef.current,
         {
@@ -112,10 +112,10 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({ onComplete }) => {
           scale: 1,
           x: 0,
           y: 0,
-          duration: 0.95,
+          duration: 0.6,
           ease: 'back.out(1.5)',
         },
-        1.65
+        1.05
       );
 
       // Step D: Subtle sun aura pulse to celebrate completion
@@ -123,12 +123,12 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({ onComplete }) => {
         sunGroupRef.current,
         {
           scale: 1.05,
-          duration: 0.3,
+          duration: 0.175,
           yoyo: true,
           repeat: 1,
           ease: 'power1.inOut',
         },
-        2.6
+        1.65
       );
     },
     { scope: containerRef }

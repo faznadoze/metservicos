@@ -507,7 +507,7 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
   );
 
   return (
-    <section id="funcionamento" ref={sectionRef} className="bg-[#0a0a0a] py-14 md:py-16">
+    <section id="funcionamento" ref={sectionRef} className="bg-[#0a0a0a] py-14 md:py-20 overflow-hidden">
       <div className="mx-auto flex max-w-[1280px] flex-col items-center gap-10 md:gap-12 px-5 sm:px-6">
         <header className="flex max-w-[768px] flex-col items-center gap-3.5 md:gap-4 text-center">
           <p className="process-header-item text-xs font-bold uppercase leading-4 tracking-[1.2px] text-[#227cc5]">
@@ -521,18 +521,24 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
             investimento.
           </p>
         </header>
+      </div>
 
+      <div className="relative mt-10 md:mt-12">
         <div
           ref={trackRef}
-          className="-mx-5 sm:-mx-6 md:mx-0 flex w-[calc(100%+2.5rem)] sm:w-[calc(100%+3rem)] md:w-full snap-x snap-mandatory gap-4 md:gap-8 overflow-x-auto px-5 sm:px-6 md:px-0 pt-2 md:pt-4 md:overflow-visible touch-pan-y [scrollbar-width:none]"
+          className="flex w-full snap-x snap-mandatory gap-4 sm:gap-6 md:gap-8 overflow-x-auto px-5 sm:px-6 md:px-[max(2rem,calc((100%-1232px)/2))] scroll-pl-5 sm:scroll-pl-6 md:scroll-pl-[max(2rem,calc((100%-1232px)/2))] pt-2 pb-4 touch-pan-y [scrollbar-width:none]"
         >
           {STEPS.map((s, idx) => (
             <article
               key={s.tag}
-              onMouseEnter={() => setActive(idx)}
-              className="process-step-card group flex w-[84vw] max-w-[330px] md:w-auto md:max-w-none md:flex-1 shrink-0 snap-center flex-col rounded-3xl border border-white/10 bg-white/[0.03] md:border-transparent md:bg-transparent p-5 sm:p-6 transition-colors duration-200 ease-emil-out [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/[0.03] will-change-transform"
+              onClick={() => scrollToStep(idx)}
+              className={`process-step-card group flex w-[86vw] max-w-[360px] sm:w-[440px] sm:max-w-none md:w-[540px] lg:w-[600px] shrink-0 snap-center md:snap-start flex-col rounded-3xl border p-5 sm:p-6 md:p-7 transition-[background-color,border-color] duration-200 ease-emil-out will-change-transform cursor-pointer ${
+                idx === active
+                  ? 'border-white/20 bg-white/[0.05]'
+                  : 'border-white/10 bg-white/[0.02] [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/[0.04]'
+              }`}
             >
-              <div className="mb-5 h-44 sm:h-48 overflow-hidden rounded-2xl bg-[#1c1c1c]">
+              <div className="mb-5 h-44 sm:h-52 md:h-60 overflow-hidden rounded-2xl bg-[#1c1c1c]">
                 <div className="process-step-parallax size-full scale-110 will-change-transform">
                   <img
                     src={s.img}
@@ -545,11 +551,16 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
               <p className="mb-2 text-[11px] font-semibold uppercase leading-[16.5px] tracking-[0.275px] text-[#78b6e9]">
                 {s.tag}
               </p>
-              <h3 className="mb-3 min-h-[49.5px] text-lg font-bold leading-[24.75px] text-white">{s.title}</h3>
-              <p className="mb-6 text-xs leading-[19.5px] text-[#9ca3af]">{s.desc}</p>
+              <h3 className="mb-3 min-h-[49.5px] text-lg md:text-xl font-bold leading-[24.75px] md:leading-7 text-white">
+                {s.title}
+              </h3>
+              <p className="mb-6 text-xs md:text-sm leading-[19.5px] md:leading-[22px] text-[#9ca3af]">{s.desc}</p>
               <button
                 type="button"
-                onClick={onCta}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCta();
+                }}
                 className="mt-auto self-start min-h-[44px] cursor-pointer rounded-full bg-white px-5 py-2.5 text-xs font-semibold leading-4 text-black [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-gray-200 active:scale-[0.96] active:bg-gray-200 transition-[transform,background-color] duration-150 ease-emil-out"
               >
                 {s.cta}
@@ -557,28 +568,28 @@ export function ProcessSection({ onCta }: { onCta: () => void }) {
             </article>
           ))}
         </div>
+      </div>
 
-        <div className="flex w-full items-center justify-between md:justify-end gap-1.5 pt-1 md:pt-4">
-          <span className="font-mono-tabular text-xs font-medium text-[#9ca3af] md:hidden">
-            Etapa 0{active + 1} de 0{STEPS.length}
-          </span>
-          <div className="flex items-center gap-1.5" role="group" aria-label="Etapas do atendimento">
-            {STEPS.map((step, i) => (
-              <button
-                key={step.tag}
-                type="button"
-                aria-label={`Ver ${step.tag}`}
-                onClick={() => scrollToStep(i)}
-                className="flex min-h-[44px] items-center py-2 cursor-pointer active:scale-95 transition-transform duration-150 ease-emil-out"
-              >
-                <span
-                  className={`h-1 md:h-0.5 w-10 rounded-full transition-colors duration-200 ease-emil-out ${
-                    i === active ? 'bg-[#78b6e9]' : 'bg-white/20'
-                  }`}
-                />
-              </button>
-            ))}
-          </div>
+      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-2 px-5 sm:px-6 pt-3 md:pt-5">
+        <span className="font-mono-tabular text-xs font-medium text-[#9ca3af]">
+          Etapa 0{active + 1} de 0{STEPS.length}
+        </span>
+        <div className="flex items-center gap-2" role="group" aria-label="Etapas do atendimento">
+          {STEPS.map((step, i) => (
+            <button
+              key={step.tag}
+              type="button"
+              aria-label={`Ver ${step.tag}`}
+              onClick={() => scrollToStep(i)}
+              className="flex min-h-[44px] items-center py-2 cursor-pointer active:scale-95 transition-transform duration-150 ease-emil-out"
+            >
+              <span
+                className={`h-1 md:h-1.5 rounded-full transition-[width,background-color] duration-200 ease-emil-out ${
+                  i === active ? 'w-12 bg-[#78b6e9]' : 'w-8 bg-white/20 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/40'
+                }`}
+              />
+            </button>
+          ))}
         </div>
       </div>
     </section>
