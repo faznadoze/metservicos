@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build & Deploy via FTP
+    name: Build & Deploy via SSH
     runs-on: ubuntu-latest
 
     steps:
@@ -30,13 +30,26 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Deploy to HostGator via FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          security: loose
-          local-dir: ./dist/
-          server-dir: ${{ vars.FTP_SERVER_DIR || '/public_html/' }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add HostGator host to known_hosts
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ vars.SSH_PORT || '2222' }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy dist/ to HostGator via rsync
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ vars.SSH_PORT || '2222' }}
+          SSH_TARGET_DIR: ${{ vars.SSH_TARGET_DIR || '~/public_html/' }}
+        run: |
+          rsync -avz --delete \
+            -e "ssh -p $SSH_PORT" \
+            ./dist/ "${SSH_USER}@${SSH_HOST}:${SSH_TARGET_DIR}"
